@@ -10,33 +10,33 @@ import {
 // import { currentUser, mockPermits } from '../../services/mock-data';
 // import { getRoleString } from '../../utils/helpers';
 import { useRouter } from 'expo-router';
-import { currentUser, mockPermits } from '../services/mock-data';
+import { currentUser } from '../services/mock-data';
 import { getRoleString } from '../utils/helpers';
+import { usePermits } from '../context/PermitsContext';
 
 const ProfileScreen = () => {
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
-
+  const { permits } = usePermits();
   const stats = {
-    pending: mockPermits.filter(
+    pending: permits.filter(
       (p) => p.status === 'pending' && p.requesterId === currentUser.id
     ).length,
-    active: mockPermits.filter(
+    active: permits.filter(
       (p) =>
         (p.status === 'approved' || p.status === 'inProgress') &&
         p.requesterId === currentUser.id
     ).length,
-    completed: mockPermits.filter(
+    completed: permits.filter(
       (p) => p.status === 'completed' && p.requesterId === currentUser.id
     ).length,
     approvalsPending: ['supervisor', 'safetyOfficer', 'admin'].includes(
       currentUser.role
     )
-      ? mockPermits.filter((p) => p.status === 'pending').length
+      ? permits.filter((p) => p.status === 'pending').length
       : null,
   };
-
   const handleLogout = () => {
     router.replace('/auth/login');
   };

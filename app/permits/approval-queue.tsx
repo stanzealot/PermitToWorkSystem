@@ -11,23 +11,27 @@ import {
 // import { mockPermits, currentUser } from '../../services/mock-data';
 // import { StatusChip } from '../../components/StatusChip';
 import { useRouter } from 'expo-router';
-import { PermitStatus } from '../models/permit';
+import { Permit, PermitStatus } from '../models/permit';
 import { currentUser, mockPermits } from '../services/mock-data';
+import { usePermits } from '../context/PermitsContext';
 // import { PermitStatus } from '../../models/permit';
 
 const ApprovalQueueScreen = () => {
   const router = useRouter();
+  const { permits, updatePermit } = usePermits();
   const [pendingPermits, setPendingPermits] = useState(
-    mockPermits.filter((p) => p.status === PermitStatus.PENDING)
+    permits.filter((p) => p.status === PermitStatus.PENDING)
   );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRefresh = () => {
     setIsLoading(true);
     setTimeout(() => {
-      setPendingPermits(
-        mockPermits.filter((p) => p.status === PermitStatus.PENDING)
-      );
+      const handleRefresh = () => {
+        setPendingPermits(
+          permits.filter((p) => p.status === PermitStatus.PENDING)
+        );
+      };
       setIsLoading(false);
     }, 1000);
   };
@@ -41,10 +45,18 @@ const ApprovalQueueScreen = () => {
         {
           text: 'Approve',
           onPress: (comment) => {
-            permit.status = PermitStatus.APPROVED;
-            permit.approvedBy = currentUser.name;
-            permit.approvedDate = new Date();
-            if (comment) permit.comments = comment;
+            // Prepare the updates object
+            const updates = {
+              status: PermitStatus.APPROVED,
+              approvedBy: currentUser.name,
+              approvedDate: new Date(),
+              ...(comment && { comments: comment }), // Only add comments if provided
+            };
+
+            // Call updatePermit with two arguments
+            updatePermit(permit.id, updates);
+
+            // Update local state
             setPendingPermits((prev) => prev.filter((p) => p.id !== permit.id));
             Alert.alert('Success', 'Permit approved successfully');
           },

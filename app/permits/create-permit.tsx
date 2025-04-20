@@ -19,10 +19,12 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { currentUser, mockPermits } from '../services/mock-data';
 import { Permit, PermitStatus } from '../models/permit';
+import { usePermits } from '../context/PermitsContext';
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const CreatePermitScreen = () => {
+  const { addPermit } = usePermits();
   const router = useRouter();
   const scrollViewRef = useRef(null);
   const [workTitle, setWorkTitle] = useState('');
@@ -142,7 +144,7 @@ const CreatePermitScreen = () => {
 
     setTimeout(() => {
       const newPermit = {
-        id: `PTW-${mockPermits.length + 1}`.padStart(7, '0'),
+        id: `PTW-${Date.now()}`.padStart(7, '0'),
         workTitle,
         location,
         requesterId: currentUser.id,
@@ -155,7 +157,7 @@ const CreatePermitScreen = () => {
         createdAt: new Date(),
       };
 
-      mockPermits.push(newPermit);
+      addPermit(newPermit);
       setIsSubmitting(false);
 
       Alert.alert('Success', 'Permit request submitted successfully', [

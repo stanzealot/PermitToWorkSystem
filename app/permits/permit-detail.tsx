@@ -14,14 +14,17 @@ import { StatusChip } from '../../components/StatusChip';
 import { PermitStatus } from '../models/permit';
 import { currentUser, mockPermits } from '../services/mock-data';
 import { formatDate } from '../utils/helpers';
+import { usePermits } from '../context/PermitsContext';
 // import { formatDate } from '../../utils/helpers';
 
 const PermitDetailScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [comment, setComment] = useState('');
+  const { permits, updatePermit } = usePermits(); // Get update function
 
-  const permit = mockPermits.find((p) => p.id === id);
+  const permitId = Array.isArray(id) ? id[0] : id;
+  const permit = permits.find((p) => p.id === permitId);
   if (!permit) {
     return (
       <View style={styles.container}>
@@ -31,14 +34,20 @@ const PermitDetailScreen = () => {
   }
 
   const handleApprove = () => {
-    permit.status = PermitStatus.APPROVED;
-    permit.approvedBy = currentUser.name;
-    permit.approvedDate = new Date();
-    if (comment) permit.comments = comment;
+    if (!permit) return;
+
+    // Prepare updates
+    const updates = {
+      status: PermitStatus.APPROVED,
+      approvedBy: currentUser.name,
+      approvedDate: new Date(),
+      ...(comment && { comments: comment }),
+    };
+
+    updatePermit(permit.id, updates);
     Alert.alert('Success', 'Permit approved successfully');
     router.back();
   };
-
   const handleReject = () => {
     if (!comment) {
       Alert.alert('Error', 'Please provide a reason for rejection');
