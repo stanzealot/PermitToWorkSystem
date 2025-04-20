@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { mockPermits } from '../services/mock-data';
 import { PermitStatus } from '../models/permit';
+import { usePermits } from '../context/PermitsContext';
 
 const Tab = createMaterialTopTabNavigator();
 const { width } = Dimensions.get('window');
@@ -111,11 +112,18 @@ const PermitsListScreen = () => {
 };
 
 const PermitList = ({ status }: any) => {
+  const { permits, updatePermit } = usePermits();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const filteredPermits = mockPermits.filter((p) => p.status === status);
+  //   const filteredPermits = mockPermits.filter((p) => p.status === status);
+  // Filter permits from context based on status
+  //   const filteredPermits = permits.filter((p) => p.status === status);
+  const filteredPermits = useMemo(
+    () => permits.filter((p) => p.status === status),
+    [permits, status]
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -174,7 +182,7 @@ const PermitList = ({ status }: any) => {
 
   return (
     <FlatList
-      data={filteredPermits}
+      data={permits.filter((p) => p.status === status)}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.listContainer}
       refreshControl={
@@ -218,11 +226,29 @@ const PermitList = ({ status }: any) => {
 
           {item.hazards && item.hazards.length > 0 && (
             <View style={styles.tagsContainer}>
-              {item.hazards.slice(0, 3).map((hazard, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>{hazard}</Text>
-                </View>
-              ))}
+              {item.hazards
+                .slice(0, 3)
+                .map(
+                  (
+                    hazard:
+                      | string
+                      | number
+                      | boolean
+                      | React.ReactElement<
+                          any,
+                          string | React.JSXElementConstructor<any>
+                        >
+                      | Iterable<React.ReactNode>
+                      | React.ReactPortal
+                      | null
+                      | undefined,
+                    index: React.Key | null | undefined
+                  ) => (
+                    <View key={index} style={styles.tag}>
+                      <Text style={styles.tagText}>{hazard}</Text>
+                    </View>
+                  )
+                )}
               {item.hazards.length > 3 && (
                 <View style={styles.tag}>
                   <Text style={styles.tagText}>+{item.hazards.length - 3}</Text>
